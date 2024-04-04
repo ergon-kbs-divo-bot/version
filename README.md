@@ -15,9 +15,6 @@ name: workflow
 on: push
 
 jobs:
-  permissions:
-     actions: read
-     checks: read
   wait:
     runs-on: ubuntu-latest
     steps:
