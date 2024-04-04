@@ -1,11 +1,35 @@
 # version
 
+Implements deterministic versioning along the format (but not the logic) of
+git-describe for sparse checkouts.
+
 [![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
 [![Check dist/](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml)
 
-Implements deterministic versioning along the format (but not the logic) of
-git-describe for sparse checkouts.
+## Usage
+
+```yaml
+name: workflow
+
+on: push
+
+jobs:
+  permissions:
+     actions: read
+     checks: read
+  wait:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Determine Version
+        id: version
+        uses: nt-ergon/version@v1.0.0
+      - name: Log Version
+        run: |
+          echo $VERSION
+          echo ${{ steps.version.outputs.version }}
+```
 
 ## Initial Setup
 
