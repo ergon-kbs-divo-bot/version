@@ -29041,24 +29041,17 @@ async function run() {
     }
 }
 exports.run = run;
-const pageSize = 100;
 // Maps commit SHA to Tag-Name
 async function getTags(octokit) {
     const result = new Map();
-    let page = 0;
-    let fetchCount = 0;
-    do {
-        const { data: tags } = await octokit.rest.repos.listTags({
-            ...github.context.repo,
-            per_page: pageSize,
-            page
-        });
-        fetchCount = tags.length;
-        page += 1;
+    const iterator = octokit.paginate.iterator(octokit.rest.repos.listTags, {
+        ...github.context.repo
+    });
+    for await (const { data: tags } of iterator) {
         for (const tag of tags) {
             result.set(tag.commit.sha, tag.name);
         }
-    } while (fetchCount === pageSize);
+    }
     return result;
 }
 class LazyGitCommit {
@@ -29077,26 +29070,25 @@ class LazyGitCommit {
 }
 async function getHistory(sha, octokit) {
     const commits = new Map();
-    let page = 0;
+    const iter = octokit.paginate.iterator(octokit.rest.repos.listCommits, {
+        ...github.context.repo,
+        sha
+    });
+    const iterator = iter[Symbol.asyncIterator]();
     const provider = async (hash) => {
         while (!commits.has(hash)) {
-            const { data: rawCommits } = await octokit.rest.repos.listCommits({
-                ...github.context.repo,
-                sha: hash,
-                page,
-                per_page: pageSize
-            });
-            page += 1;
+            const { value, done } = await iterator.next();
+            if (done) {
+                break;
+            }
+            const { data: rawCommits } = value;
             for (const commit of rawCommits) {
                 commits.set(commit.sha, commit);
-            }
-            if (rawCommits.length < pageSize) {
-                break;
             }
         }
         const commit = commits.get(hash);
         if (commit === undefined) {
-            throw Error(`commit ${hash} was undefined, must not happen, all commits should be loaded. ${JSON.stringify({ page, commits })}`);
+            throw Error(`commit ${hash} was undefined, must not happen, all commits should be loaded. ${JSON.stringify({ commits })}`);
         }
         return commit;
     };

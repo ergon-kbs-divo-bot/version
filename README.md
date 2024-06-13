@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Determine Version
         id: version
-        uses: nt-ergon/version@v1.0.0
+        uses: nt-ergon/version@v1.1.0
       - name: Log Version
         run: |
           echo $VERSION
